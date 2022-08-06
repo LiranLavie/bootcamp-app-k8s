@@ -1,0 +1,55 @@
+# Default values for appchart.
+
+namespace: "production"
+
+deployment:
+  replicaCount: 3
+  appName: "trackerapp"
+  appPort: 80
+  configMapName: "trackerapp-config"
+  secretName: "appsecret"
+  historyLimit: 3
+  strategyType: "RollingUpdate"
+  rollingUnavilable: 1
+  rollingSurge: 1
+  requestsCPU: "100m"
+  requestsMem: "128Mi"
+  limitsCPU: "200m"
+  limitsMem: "256Mi"
+  imagePullPolicy: "IfNotPresent"
+
+image:
+  name: trackerapp.azurecr.io/trackerapp
+  tag: "v31"
+
+configMap:
+  name: "trackerapp-config"
+
+service:
+  name: "trackerapp-service"
+  type: "ClusterIP"
+  port: "80"
+  targetPort: "80" 
+  protocol: "TCP"
+
+ingress:
+  name: "ingress-nginx"
+  className: "nginx"
+  path	: "/"
+  pathType: "Prefix"
+  serviceName: "trackerapp-service"
+  portNumber: "80"
+  annotations: "nginx.ingress.kubernetes.io/rewrite-target: /"
+
+secretProvidorClass:
+  name: "trackerapp-vault"
+  secretName: "appsecret"
+  type: "Opaque"
+  usePodIdentity: "false"                                        
+  keyvaultName: trackerapp-vault                                 
+  useVMManagedIdentity: "true"                                  
+  userAssignedIdentityID: " "  
+  tenantId: " "
+  volumeName: "secrets-store"
+  mountPath: "/mnt/secrets-store"
+  volumeReadOnly: "true"

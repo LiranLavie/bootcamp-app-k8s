@@ -1,0 +1,51 @@
+# required parameters from pipleline
+parameters:
+- name: environment
+- name: dependsOn
+- name: condition
+- name: image_tag
+- name: chart_path
+- name: stage_name
+- name: chart_version
+- name: chart_name
+- name: acr
+- name: helm_acr
+- name: replica_count
+- name: identity_id
+- name: app_name
+- name: helm_acr_pass
+- name: tenantId
+
+# Reusable deploy stage
+stages:  
+- stage: ${{ parameters.stage_name }}
+  dependsOn: ${{ parameters.dependsOn }}
+  condition: ${{ parameters.condition }}
+  jobs:
+  - deployment: ${{ parameters.stage_name }}
+    pool:
+      name: ${{ parameters.environment }}
+    environment:
+     name: ${{ parameters.environment }}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+# Get helm package from acr and deploy the app
+          - task: CmdLine@2
+            displayName: 'Login to helm ACR'
+            inputs:
+              script: helm registry login ${{ parameters.acr }} --username ${{ parameters.app_name }} --password ${{ parameters.helm_acr_pass }}           
+          - task: CmdLine@2
+            displayName: 'Deploy To ${{ parameters.stage_name }}'
+            inputs:
+              script: |
+                helm upgrade --install --set \ 
+                'secretProvidorClass.tenantId=${{ parameters.tenantId }} \
+                ,image.tag=${{ parameters.image_tag }} \
+                ,namespace=${{ parameters.environment }} \
+                ,deployment.replicaCount=${{ parameters.replica_count }} \
+                ,secretProvidorClass.userAssignedIdentityID=${{ parameters.identity_id }}' \
+                -n ${{ parameters.environment }} \
+                 ${{ parameters.chart_name }} ${{ parameters.helm_acr }} \ 
+                 --version ${{ parameters.chart_version }}         

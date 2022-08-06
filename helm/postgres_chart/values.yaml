@@ -1,0 +1,40 @@
+# Default values for postgreschart.
+
+namespace: "staging"
+
+deployment:
+  replicaCount: "1"
+  dbName: "postgresdb"
+  dbPort: "5432"
+  configMapName: "postgres-config"
+  imagePullPolicy: "IfNotPresent"
+  secretName: "appsecret"
+  requestsCPU: "250m"
+  requestsMem: "256Mi"
+  limitsCPU: "500m"
+  limitsMem: "512Mi"
+
+image:
+  name: "postgres"
+  tag: "14.4-alpine"
+
+configMap:
+  name: "postgres-config"
+
+
+service:
+  name: "postgres-service"
+  type: "ClusterIP"
+  port: "5432"
+  targetPort: "5432" 
+  protocol: "TCP"
+
+persistentVolume:
+  pvName: "postgresdb-pv-volume"
+  pvClaimName: "postgresdb-pv-claim"
+  storageSize: "1Gi"
+  accessModes: "ReadWriteMany"
+  hostPath: "/mnt/data"
+  mountPath: "/var/lib/postgresql/data"
+  storageClassName: "managed-csi"
+  type: "local"

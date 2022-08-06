@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deployment.dbName }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.deployment.dbName }}
+spec:
+  replicas: {{ .Values.deployment.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.deployment.dbName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.deployment.dbName }}
+    spec:
+      containers:
+      - name: {{ .Values.deployment.dbName }}
+        image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.deployment.imagePullPolicy }}
+        resources:
+          requests:
+            cpu: {{ .Values.deployment.requestsCPU }}
+            memory: {{ .Values.deployment.requestsMem }}
+          limits:
+            cpu: {{ .Values.deployment.limitsCPU }}
+            memory: {{ .Values.deployment.limitsMem }} 
+        ports:
+        - containerPort: {{ .Values.deployment.dbPort }}
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.deployment.secretName }}
+              key: PGPASSWORD
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.deployment.secretName }}
+              key: PGUSERNAME
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.deployment.secretName }}
+              key: PGDATABASE                            
+        volumeMounts:
+          - name: {{ .Values.deployment.dbName }}
+            mountPath: {{ .Values.persistentVolume.mountPath }}                         
+      volumes:
+        - name: {{ .Values.deployment.dbName }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistentVolume.pvClaimName }}                          

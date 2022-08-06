@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deployment.appName }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.deployment.appName }}
+spec:
+  replicas: {{ .Values.deployment.replicaCount }}
+  revisionHistoryLimit: {{ .Values.deployment.historyLimit }}
+  strategy:
+    type: {{ .Values.deployment.strategyType }}
+    rollingUpdate:
+      maxUnavailable: {{ .Values.deployment.rollingUnavilable }}
+      maxSurge: {{ .Values.deployment.rollingSurge }} 
+  selector:
+    matchLabels:
+      app: {{ .Values.deployment.appName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.deployment.appName }}
+    spec:
+      containers:
+      - name: {{ .Values.deployment.appName }}
+        image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
+        resources:
+          requests:
+            cpu: {{ .Values.deployment.requestsCPU }}
+            memory: {{ .Values.deployment.requestsMem }}
+          limits:
+            cpu: {{ .Values.deployment.limitsCPU }}
+            memory: {{ .Values.deployment.limitsMem }}        
+        envFrom:
+        - configMapRef:
+            name: {{ .Values.deployment.configMapName }}
+        - secretRef:
+            name: {{ .Values.deployment.secretName }}                                           
+        imagePullPolicy: {{ .Values.deployment.imagePullPolicy }}
+        ports:
+        - containerPort: {{ .Values.deployment.appPort }}
+        volumeMounts:
+        - name: {{ .Values.secretProvidorClass.volumeName }}
+          mountPath: {{ .Values.secretProvidorClass.mountPath }}
+          readOnly: {{ .Values.secretProvidorClass.volumeReadOnly }}                                                                                           
+      volumes:
+        - name: {{ .Values.secretProvidorClass.volumeName }}
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: {{ .Values.secretProvidorClass.volumeReadOnly }}
+            volumeAttributes:
+              secretProviderClass: {{ .Values.secretProvidorClass.name }}
+                        

@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: PersistentVolume # Create a PV
+metadata:
+  name: {{ .Values.persistentVolume.pvName }} # Sets PV's name
+  namespace: {{ .Values.namespace }}
+  labels:
+    type: {{ .Values.persistentVolume.type }} # Sets PV's type to local
+spec:
+  storageClassName: {{ .Values.persistentVolume.storageClassName }}
+  capacity:
+    storage: {{ .Values.persistentVolume.storageSize }} # Sets PV Volume
+  accessModes:
+    - {{ .Values.persistentVolume.accessModes }}
+  hostPath:
+    path: {{ .Values.persistentVolume.hostPath }} # Sets the volume's path
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim # Create PVC
+metadata:
+  name: {{ .Values.persistentVolume.pvClaimName }} # Sets name of PV
+spec:
+  storageClassName: {{ .Values.persistentVolume.storageClassName }}
+  accessModes:
+    - {{ .Values.persistentVolume.accessModes }} # Sets read and write access
+  resources:
+    requests:
+      storage: {{ .Values.persistentVolume.storageSize }} # Sets volume size

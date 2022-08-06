@@ -1,0 +1,95 @@
+trigger:
+ branches:
+   include:
+   - main
+ paths:
+   exclude:
+   - helm/*
+
+
+pool:
+  name: staging
+
+variables: 
+# add group variables
+- group: app_variables
+
+stages:  
+# Continuous Integration
+- stage: Build  
+  jobs:  
+
+  - job: Build  
+    steps:        
+# clear unused images
+    - task: CmdLine@2
+      displayName: Clear Unused Images  
+      inputs:
+        script: docker image prune -a -f    
+         
+
+# build image          
+    - task: Docker@2
+      displayName: 'Build Image' 
+      inputs:
+        command: 'build'
+        Dockerfile: '**/Dockerfile'
+        arguments: '-t $(app_name):testing'
+         
+
+# tag the image              
+    - task: CmdLine@2
+      displayName: 'Tag Image' 
+      inputs:
+        script: docker tag $(app_name):testing $(container_registry)/$(app_name):v$(Build.BuildId)
+        
+
+# push to azure container registry and clear unused images on agent
+    - task: CmdLine@2
+      displayName: 'Push Image To ACR'
+      inputs:
+        script: |
+         az acr login --name $(app_name)
+         docker push  $(container_registry)/$(app_name):v$(Build.BuildId)
+         docker image prune -a -f
+
+
+# Continuous Deployment   
+# Deploy to staging stage
+- template: templates/deploy_template.yml
+  parameters:
+    stage_name: Staging
+    environment: staging
+    dependsOn: Build
+    condition: succeeded()
+    image_tag: v$(Build.BuildId)
+    chart_path: $(chart_path)
+    chart_version: $(chart_version)
+    chart_name: $(chart_name)
+    helm_acr: $(helm_acr)/$(chart_name)
+    acr: $(container_registry)
+    helm_acr_pass: $(helm_acr_pass)
+    identity_id: $(staging_identity_id)
+    app_name: $(app_name)
+    tenent_id: $(tenent_id)
+    replica_count: 3   
+ 
+# Continuous Delivery  
+# Deploy to production stage
+- template: templates/deploy_template.yml
+  parameters:
+    stage_name: Production
+    environment: production
+    dependsOn: Staging
+    condition: succeeded()
+    image_tag: v$(Build.BuildId)
+    chart_path: $(chart_path)
+    chart_version: $(chart_version)
+    chart_name: $(chart_name)
+    helm_acr: $(helm_acr)/$(chart_name)
+    acr: $(container_registry)
+    helm_acr_pass: $(helm_acr_pass)
+    identity_id: $(production_identity_id)
+    tenent_id: $(tenent_id)
+    app_name: $(app_name)
+    replica_count: 4 
