@@ -14,7 +14,7 @@ parameters:
 - name: identity_id
 - name: app_name
 - name: helm_acr_pass
-- name: tenantId
+- name: tenent_id
 
 # Reusable deploy stage
 stages:  
@@ -41,7 +41,7 @@ stages:
             inputs:
               script: |
                 helm upgrade --install --set \ 
-                'secretProvidorClass.tenantId=${{ parameters.tenantId }} \
+                'secretProvidorClass.tenantId=${{ parameters.tenent_id }} \
                 ,image.tag=${{ parameters.image_tag }} \
                 ,namespace=${{ parameters.environment }} \
                 ,deployment.replicaCount=${{ parameters.replica_count }} \
