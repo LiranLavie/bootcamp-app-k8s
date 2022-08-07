@@ -40,8 +40,8 @@ stages:
             displayName: 'Deploy To ${{ parameters.stage_name }}'
             inputs:
               script: |
-                helm upgrade --install \ 
-                --set 'secretProvidorClass.tenantId=${{ parameters.tenent_id }} \
+                helm upgrade --install\ 
+                --set 'secretProvidorClass.tenantId=${{ parameters.tenent_id }}\
                 ,image.tag=${{ parameters.image_tag }},namespace=${{ parameters.environment }},deployment.replicaCount=${{ parameters.replica_count }},secretProvidorClass.userAssignedIdentityID=${{ parameters.identity_id }}'\
                 -n ${{ parameters.environment }} ${{ parameters.chart_name }} ${{ parameters.helm_acr }} --version ${{ parameters.chart_version }}
                           
