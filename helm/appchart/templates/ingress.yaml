@@ -3,6 +3,7 @@ kind: Ingress
 metadata:
   name: {{ .Values.ingress.name }}
   namespace: {{ .Values.namespace }}
+#Target URI where the traffic must be redirected  
   annotations:
     {{ .Values.ingress.annotations }}
 spec:
